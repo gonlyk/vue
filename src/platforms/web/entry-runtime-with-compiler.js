@@ -19,9 +19,11 @@ Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+  // 判断el是dom还是选择器，如果是选择器，就转换成dom。
   el = el && query(el)
 
   /* istanbul ignore if */
+  // el不能是html和body
   if (el === document.body || el === document.documentElement) {
     process.env.NODE_ENV !== 'production' && warn(
       `Do not mount Vue to <html> or <body> - mount to normal elements instead.`
@@ -31,6 +33,7 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
+  // 优先使用render，没有才去找template
   if (!options.render) {
     let template = options.template
     if (template) {
@@ -79,6 +82,7 @@ Vue.prototype.$mount = function (
       }
     }
   }
+  // 调用mount
   return mount.call(this, el, hydrating)
 }
 

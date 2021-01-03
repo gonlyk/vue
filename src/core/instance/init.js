@@ -27,8 +27,10 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     // a flag to avoid this being observed
+    // 标识这是个Vue实例，避免之后被observed
     vm._isVue = true
     // merge options
+    // 混入options，把内置options和用户options合并
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
@@ -49,13 +51,23 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
+    // 初始化生命周期相关属性
+    // $parent $root $children $refs
     initLifecycle(vm)
+    // 初始化事件监听，处理父组件绑定在当前组件上的事件
     initEvents(vm)
+    // 编译render的初始化
+    // $slots/$scopedSlots/_c/$createElement/$attrs/$listeners
     initRender(vm)
+    // beforeCreate回调
     callHook(vm, 'beforeCreate')
+    // 把inject的成员注入到实例
     initInjections(vm) // resolve injections before data/props
+    // 初始化实例的_props/methods/_data/compute/watch
     initState(vm)
+    // 初始化provide
     initProvide(vm) // resolve provide after data/props
+    // created回调
     callHook(vm, 'created')
 
     /* istanbul ignore if */

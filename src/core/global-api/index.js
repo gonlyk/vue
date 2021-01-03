@@ -29,11 +29,13 @@ export function initGlobalAPI (Vue: GlobalAPI) {
       )
     }
   }
+  //初始化Vue.config，使用definePropety禁止用户修改
   Object.defineProperty(Vue, 'config', configDef)
 
   // exposed util methods.
   // NOTE: these are not considered part of the public API - avoid relying on
   // them unless you are aware of the risk.
+  // 非常用方法，不推荐使用
   Vue.util = {
     warn,
     extend,
@@ -50,8 +52,10 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     observe(obj)
     return obj
   }
-
+//</T>
+  // 不适用原型，提高性能
   Vue.options = Object.create(null)
+  // components/directives/filters
   ASSET_TYPES.forEach(type => {
     Vue.options[type + 's'] = Object.create(null)
   })
@@ -60,10 +64,15 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   // components with in Weex's multi-instance scenarios.
   Vue.options._base = Vue
 
+  // 将builtInComponents成员浅拷贝到Vue.options.components
   extend(Vue.options.components, builtInComponents)
 
+  // 初始化Vue.use
   initUse(Vue)
+  // 初始化Vue.mixin
   initMixin(Vue)
+  // 初始化Vue.extend
   initExtend(Vue)
+  // 提供ASSET_TYPES中的成员components/directives/filters的注册函数
   initAssetRegisters(Vue)
 }

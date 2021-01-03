@@ -7,6 +7,7 @@ import { defineReactive, toggleObserving } from '../observer/index'
 export function initProvide (vm: Component) {
   const provide = vm.$options.provide
   if (provide) {
+    // 把自身provide装入_provided，供自己的子组件使用
     vm._provided = typeof provide === 'function'
       ? provide.call(vm)
       : provide
@@ -14,9 +15,11 @@ export function initProvide (vm: Component) {
 }
 
 export function initInjections (vm: Component) {
+  // 提取所有父组件的provide
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
     toggleObserving(false)
+    // 将提供的属性定义到实例上，并且不允许更改
     Object.keys(result).forEach(key => {
       /* istanbul ignore else */
       if (process.env.NODE_ENV !== 'production') {
@@ -55,6 +58,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
           result[key] = source._provided[provideKey]
           break
         }
+        // 查看所有父组件的_provided
         source = source.$parent
       }
       if (!source) {

@@ -35,6 +35,7 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+// 将属性重新定义到this上，使用this.xxx是返回对应sourceKey上的值
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -45,6 +46,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+// 将数据注入到this上
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
@@ -103,6 +105,7 @@ function initProps (vm: Component, propsOptions: Object) {
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
     if (!(key in vm)) {
+      // 将_props上的属性重新定义到this上，方便调用
       proxy(vm, `_props`, key)
     }
   }
@@ -270,12 +273,14 @@ function initMethods (vm: Component, methods: Object) {
           vm
         )
       }
+      // 不允许method和props同名
       if (props && hasOwn(props, key)) {
         warn(
           `Method "${key}" has already been defined as a prop.`,
           vm
         )
       }
+      // 不允许使用_和$开头
       if ((key in vm) && isReserved(key)) {
         warn(
           `Method "${key}" conflicts with an existing Vue instance method. ` +

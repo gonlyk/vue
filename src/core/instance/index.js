@@ -13,11 +13,15 @@ function Vue (options) {
   }
   this._init(options)
 }
-
+// 初始化_init方法
 initMixin(Vue)
+// 注册$data/$props/$set/$delete/$watch方法
 stateMixin(Vue)
+// 初始化事件方法（发布/订阅）$on/$once/$off/$emit
 eventsMixin(Vue)
+// 初始化生命周期相关的混入方法_update/$forceUpdate/$destroy
 lifecycleMixin(Vue)
+// 混入 render $nextTick/_render
 renderMixin(Vue)
 
 export default Vue

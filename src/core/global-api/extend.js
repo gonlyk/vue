@@ -30,9 +30,11 @@ export function initExtend (Vue: GlobalAPI) {
       validateComponentName(name)
     }
 
+    // 定义一个构造函数Sub，构造函数就是调用了Vue的_init
     const Sub = function VueComponent (options) {
       this._init(options)
     }
+    // Sub的原型和Vue一样
     Sub.prototype = Object.create(Super.prototype)
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
