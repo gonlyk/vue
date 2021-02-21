@@ -1,6 +1,6 @@
 /*!
  * Vue.js v2.6.12
- * (c) 2014-2020 Evan You
+ * (c) 2014-2021 Evan You
  * Released under the MIT License.
  */
 (function (global, factory) {
@@ -353,8 +353,10 @@
     }
   }
 
+  // 服务端渲染标识
   var SSR_ATTR = 'data-server-rendered';
 
+  // 被设置到Vue.option中
   var ASSET_TYPES = [
     'component',
     'directive',
@@ -2107,6 +2109,7 @@
     };
 
     initProxy = function initProxy (vm) {
+      // 如果支持Proxy，使用Proxy初始化渲染
       if (hasProxy) {
         // determine which proxy handler to use
         var options = vm.$options;
@@ -2115,6 +2118,7 @@
           : hasHandler;
         vm._renderProxy = new Proxy(vm, handlers);
       } else {
+        // 不支持，直接赋值为vm
         vm._renderProxy = vm;
       }
     };
@@ -2427,6 +2431,7 @@
   function initProvide (vm) {
     var provide = vm.$options.provide;
     if (provide) {
+      // 把自身provide装入_provided，供自己的子组件使用
       vm._provided = typeof provide === 'function'
         ? provide.call(vm)
         : provide;
@@ -2434,9 +2439,11 @@
   }
 
   function initInjections (vm) {
+    // 提取所有父组件的provide
     var result = resolveInject(vm.$options.inject, vm);
     if (result) {
       toggleObserving(false);
+      // 将提供的属性定义到实例上，并且不允许更改
       Object.keys(result).forEach(function (key) {
         /* istanbul ignore else */
         {
@@ -2473,6 +2480,7 @@
             result[key] = source._provided[provideKey];
             break
           }
+          // 查看所有父组件的_provided
           source = source.$parent;
         }
         if (!source) {
@@ -3492,9 +3500,11 @@
     // so that we get proper render context inside it.
     // args order: tag, data, children, normalizationType, alwaysNormalize
     // internal version is used by render functions compiled from templates
+    // 对编译生成的render进行渲染的方法
     vm._c = function (a, b, c, d) { return createElement(vm, a, b, c, d, false); };
     // normalization is always applied for the public version, used in
     // user-written render functions.
+    // 对手写render函数进行渲染的方法
     vm.$createElement = function (a, b, c, d) { return createElement(vm, a, b, c, d, true); };
 
     // $attrs & $listeners are exposed for easier HOC creation.
@@ -3503,6 +3513,7 @@
 
     /* istanbul ignore else */
     {
+      // 定义$attrs和$listeners，非生产时使用修改警告
       defineReactive(vm, '$attrs', parentData && parentData.attrs || emptyObject, function () {
         !isUpdatingChildComponent && warn("$attrs is readonly.", vm);
       }, true);
@@ -3516,6 +3527,7 @@
 
   function renderMixin (Vue) {
     // install runtime convenience helpers
+    // 装载render操作相关的函数
     installRenderHelpers(Vue.prototype);
 
     Vue.prototype.$nextTick = function (fn) {
@@ -3524,6 +3536,7 @@
 
     Vue.prototype._render = function () {
       var vm = this;
+      // 此处的render就是构造时传入的render函数
       var ref = vm.$options;
       var render = ref.render;
       var _parentVnode = ref._parentVnode;
@@ -3546,6 +3559,7 @@
         // separately from one another. Nested component's render fns are called
         // when parent component is patched.
         currentRenderingInstance = vm;
+        // vm.$createElement就是h函数
         vnode = render.call(vm._renderProxy, vm.$createElement);
       } catch (e) {
         handleError(e, vm, "render");
@@ -3761,8 +3775,10 @@
     vm._events = Object.create(null);
     vm._hasHookEvent = false;
     // init parent attached events
+    // 获取父元素上附加的事件
     var listeners = vm.$options._parentListeners;
     if (listeners) {
+      // 注册自定义事件
       updateComponentListeners(vm, listeners);
     }
   }
@@ -3938,6 +3954,7 @@
       vm._vnode = vnode;
       // Vue.prototype.__patch__ is injected in entry points
       // based on the rendering backend used.
+      // 第一次渲染替换DOM，之后每次都替换之前的渲染
       if (!prevVnode) {
         // initial render
         vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */);
@@ -4620,6 +4637,7 @@
     set: noop
   };
 
+  // 将属性重新定义到this上，使用this.xxx是返回对应sourceKey上的值
   function proxy (target, sourceKey, key) {
     sharedPropertyDefinition.get = function proxyGetter () {
       return this[sourceKey][key]
@@ -4630,6 +4648,7 @@
     Object.defineProperty(target, key, sharedPropertyDefinition);
   }
 
+  // 将数据注入到this上
   function initState (vm) {
     vm._watchers = [];
     var opts = vm.$options;
@@ -4686,6 +4705,7 @@
       // during Vue.extend(). We only need to proxy props defined at
       // instantiation here.
       if (!(key in vm)) {
+        // 将_props上的属性重新定义到this上，方便调用
         proxy(vm, "_props", key);
       }
     };
@@ -4855,12 +4875,14 @@
             vm
           );
         }
+        // 不允许method和props同名
         if (props && hasOwn(props, key)) {
           warn(
             ("Method \"" + key + "\" has already been defined as a prop."),
             vm
           );
         }
+        // 不允许使用_和$开头
         if ((key in vm) && isReserved(key)) {
           warn(
             "Method \"" + key + "\" conflicts with an existing Vue instance method. " +
@@ -4971,8 +4993,10 @@
       }
 
       // a flag to avoid this being observed
+      // 标识这是个Vue实例，避免之后被observed
       vm._isVue = true;
       // merge options
+      // 混入options，把内置options和用户options合并
       if (options && options._isComponent) {
         // optimize internal component instantiation
         // since dynamic options merging is pretty slow, and none of the
@@ -4991,13 +5015,23 @@
       }
       // expose real self
       vm._self = vm;
+      // 初始化生命周期相关属性
+      // $parent $root $children $refs
       initLifecycle(vm);
+      // 初始化事件监听，处理父组件绑定在当前组件上的事件
       initEvents(vm);
+      // 编译render的初始化
+      // $slots/$scopedSlots/_c/$createElement/$attrs/$listeners
       initRender(vm);
+      // beforeCreate回调
       callHook(vm, 'beforeCreate');
+      // 把inject的成员注入到实例
       initInjections(vm); // resolve injections before data/props
+      // 初始化实例的_props/methods/_data/compute/watch
       initState(vm);
+      // 初始化provide
       initProvide(vm); // resolve provide after data/props
+      // created回调
       callHook(vm, 'created');
 
       /* istanbul ignore if */
@@ -5077,11 +5111,15 @@
     }
     this._init(options);
   }
-
+  // 初始化_init方法
   initMixin(Vue);
+  // 注册$data/$props/$set/$delete/$watch方法
   stateMixin(Vue);
+  // 初始化事件方法（发布/订阅）$on/$once/$off/$emit
   eventsMixin(Vue);
+  // 初始化生命周期相关的混入方法_update/$forceUpdate/$destroy
   lifecycleMixin(Vue);
+  // 混入 render $nextTick/_render
   renderMixin(Vue);
 
   /*  */
@@ -5094,13 +5132,17 @@
       }
 
       // additional parameters
+      // 获取额外的参数
       var args = toArray(arguments, 1);
       args.unshift(this);
+      // 是对象时，使用install方法
       if (typeof plugin.install === 'function') {
         plugin.install.apply(plugin, args);
+        // 是函数时，直接调用
       } else if (typeof plugin === 'function') {
         plugin.apply(null, args);
       }
+      // 记录插件已注册
       installedPlugins.push(plugin);
       return this
     };
@@ -5110,6 +5152,7 @@
 
   function initMixin$1 (Vue) {
     Vue.mixin = function (mixin) {
+      // 将混入项放到options中
       this.options = mergeOptions(this.options, mixin);
       return this
     };
@@ -5143,9 +5186,11 @@
         validateComponentName(name);
       }
 
+      // 定义一个构造函数Sub，构造函数就是调用了Vue的_init
       var Sub = function VueComponent (options) {
         this._init(options);
       };
+      // Sub的原型和Vue一样
       Sub.prototype = Object.create(Super.prototype);
       Sub.prototype.constructor = Sub;
       Sub.cid = cid++;
@@ -5227,11 +5272,13 @@
           }
           if (type === 'component' && isPlainObject(definition)) {
             definition.name = definition.name || id;
+            // 把组件配置转换成组件构造函数
             definition = this.options._base.extend(definition);
           }
           if (type === 'directive' && typeof definition === 'function') {
             definition = { bind: definition, update: definition };
           }
+          // 注册到对应options
           this.options[type + 's'][id] = definition;
           return definition
         }
@@ -5386,11 +5433,13 @@
         );
       };
     }
+    //初始化Vue.config，使用definePropety禁止用户修改
     Object.defineProperty(Vue, 'config', configDef);
 
     // exposed util methods.
     // NOTE: these are not considered part of the public API - avoid relying on
     // them unless you are aware of the risk.
+    // 非常用方法，不推荐使用
     Vue.util = {
       warn: warn,
       extend: extend,
@@ -5407,8 +5456,10 @@
       observe(obj);
       return obj
     };
-
+  //</T>
+    // 不适用原型，提高性能
     Vue.options = Object.create(null);
+    // components/directives/filters
     ASSET_TYPES.forEach(function (type) {
       Vue.options[type + 's'] = Object.create(null);
     });
@@ -5417,14 +5468,20 @@
     // components with in Weex's multi-instance scenarios.
     Vue.options._base = Vue;
 
+    // 将builtInComponents成员浅拷贝到Vue.options.components
     extend(Vue.options.components, builtInComponents);
 
+    // 初始化Vue.use
     initUse(Vue);
+    // 初始化Vue.mixin
     initMixin$1(Vue);
+    // 初始化Vue.extend
     initExtend(Vue);
+    // 提供ASSET_TYPES中的成员components/directives/filters的注册函数
     initAssetRegisters(Vue);
   }
 
+  // 初始化静态函数
   initGlobalAPI(Vue);
 
   Object.defineProperty(Vue.prototype, '$isServer', {
@@ -6206,12 +6263,14 @@
         } else {
           if (isUndef(oldKeyToIdx)) { oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx); }
           idxInOld = isDef(newStartVnode.key)
-            ? oldKeyToIdx[newStartVnode.key]
+            ? oldKeyToIdx[newStartVnode.key]// 优先对比key，找不到在用完整的sameVNode对比方法
             : findIdxInOld(newStartVnode, oldCh, oldStartIdx, oldEndIdx);
           if (isUndef(idxInOld)) { // New element
             createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx);
           } else {
             vnodeToMove = oldCh[idxInOld];
+            //key相同并不代表是sameVNode，用户可能传入相同key但tag不同的节点，
+            //此时认为之前的对比都无效，创建新node
             if (sameVnode(vnodeToMove, newStartVnode)) {
               patchVnode(vnodeToMove, newStartVnode, insertedVnodeQueue, newCh, newStartIdx);
               oldCh[idxInOld] = undefined;
@@ -6470,6 +6529,7 @@
       if (isUndef(oldVnode)) {
         // empty mount (likely as component), create new root element
         isInitialPatch = true;
+        // 初次渲染未传入parent，不挂载
         createElm(vnode, insertedVnodeQueue);
       } else {
         var isRealElement = isDef(oldVnode.nodeType);
@@ -11889,9 +11949,11 @@
     el,
     hydrating
   ) {
+    // 判断el是dom还是选择器，如果是选择器，就转换成dom。
     el = el && query(el);
 
     /* istanbul ignore if */
+    // el不能是html和body
     if (el === document.body || el === document.documentElement) {
        warn(
         "Do not mount Vue to <html> or <body> - mount to normal elements instead."
@@ -11901,6 +11963,7 @@
 
     var options = this.$options;
     // resolve template/el and convert to render function
+    // 优先使用render，没有才去找template
     if (!options.render) {
       var template = options.template;
       if (template) {
@@ -11951,6 +12014,7 @@
         }
       }
     }
+    // 调用mount
     return mount.call(this, el, hydrating)
   };
 
@@ -11973,3 +12037,4 @@
   return Vue;
 
 })));
+//# sourceMappingURL=vue.js.map

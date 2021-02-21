@@ -43,15 +43,21 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
+    // 将Observer对象记录在data上
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
+      // 将更改数组元素的方法变成响应式方法
       if (hasProto) {
+        // 优化，如果有__proto__，通过__proto__挂载
         protoAugment(value, arrayMethods)
       } else {
+        // 通过defineProperty挂载
         copyAugment(value, arrayMethods, arrayKeys)
       }
+      // 将数组中每一个对象变成响应式对象
       this.observeArray(value)
     } else {
+      // 将每个对象变成响应式对象
       this.walk(value)
     }
   }
@@ -113,6 +119,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
   }
   let ob: Observer | void
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+    // 有__ob__说明已经是观察对象，不再重新处理
     ob = value.__ob__
   } else if (
     shouldObserve &&
@@ -153,15 +160,19 @@ export function defineReactive (
     val = obj[key]
   }
 
+  // 这里可以用walk，但是要记录Observer对象的Dep
   let childOb = !shallow && observe(val)
+  // 先定义，后使用
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
+      // 仅收集依赖调用。如果有target（Watcher），收集依赖（观察者记录他观察的依赖）
       if (Dep.target) {
         dep.depend()
         if (childOb) {
+          // 子对象的Dep也记录（观察所有子对象），如果是渲染watcher则有data改变就重渲染
           childOb.dep.depend()
           if (Array.isArray(value)) {
             dependArray(value)
@@ -187,6 +198,7 @@ export function defineReactive (
       } else {
         val = newVal
       }
+      // 如果新值是对象，将新对象也添加Observer对象，在下次调用Watcher时重新收集依赖
       childOb = !shallow && observe(newVal)
       dep.notify()
     }

@@ -145,6 +145,7 @@ export function mountComponent (
   hydrating?: boolean
 ): Component {
   vm.$el = el
+  // 此处应该已经把template转换成了render，如果没有提示未使用带编译器版本
   if (!vm.$options.render) {
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
@@ -165,6 +166,7 @@ export function mountComponent (
       }
     }
   }
+  // 调用挂载前钩子
   callHook(vm, 'beforeMount')
 
   let updateComponent
@@ -176,6 +178,7 @@ export function mountComponent (
       const startTag = `vue-perf-start:${id}`
       const endTag = `vue-perf-end:${id}`
 
+      // 开发时的性能检测
       mark(startTag)
       const vnode = vm._render()
       mark(endTag)
@@ -187,6 +190,7 @@ export function mountComponent (
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
+    // 渲染watcher的回调，render生成新vnode，update进行patch
     updateComponent = () => {
       vm._update(vm._render(), hydrating)
     }
@@ -336,6 +340,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
 
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
+  // 推入undefined避免依赖收集
   pushTarget()
   const handlers = vm.$options[hook]
   const info = `${hook} hook`

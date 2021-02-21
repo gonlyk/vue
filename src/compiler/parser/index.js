@@ -210,6 +210,7 @@ export function parse (
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
+    // 解析过程中的回调函数
     start (tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
@@ -220,7 +221,7 @@ export function parse (
       if (isIE && ns === 'svg') {
         attrs = guardIESVGBug(attrs)
       }
-
+      // 创建ast对象
       let element: ASTElement = createASTElement(tag, attrs, currentParent)
       if (ns) {
         element.ns = ns
@@ -260,6 +261,7 @@ export function parse (
       }
 
       // apply pre-transforms
+      // 解析ast对象的属性
       for (let i = 0; i < preTransforms.length; i++) {
         element = preTransforms[i](element, options) || element
       }
@@ -527,8 +529,8 @@ export function parseFor (exp: string): ?ForParseResult {
   return res
 }
 
+const exp = getAndRemoveAttr(el, 'v-if')
 function processIf (el) {
-  const exp = getAndRemoveAttr(el, 'v-if')
   if (exp) {
     el.if = exp
     addIfCondition(el, {

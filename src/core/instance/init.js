@@ -78,6 +78,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     if (vm.$options.el) {
+      // 初次渲染，执行挂载，跳转到平台$mount
       vm.$mount(vm.$options.el)
     }
   }

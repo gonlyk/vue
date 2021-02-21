@@ -20,6 +20,7 @@ export function initExtend (Vue: GlobalAPI) {
     extendOptions = extendOptions || {}
     const Super = this
     const SuperId = Super.cid
+    // 在配置上添加_Ctor，避免同一个配置对象多次extend
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
     if (cachedCtors[SuperId]) {
       return cachedCtors[SuperId]
